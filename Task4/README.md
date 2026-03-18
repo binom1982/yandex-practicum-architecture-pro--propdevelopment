@@ -6,7 +6,7 @@
 kubectl cluster-info
 ```
 
-Инициализация кеширование
+Запуск скриптов
 
 ```shell
 ./scripts/create-users.sh
