@@ -1,38 +1,44 @@
 # Аудит активности пользователей и обнаружение инцидентов
 
-## Запустить Minikube с политикой аудита# Удалить ранее запущенный кластер
-
-```shell
- Удаление старого кластера
-minikube delete --all --purge
-minikube stop
-
-# Запустик с монтированием файла   
-MSYS_NO_PATHCONV=1 minikube start \
-  --driver=docker \
-  --extra-config=apiserver.audit-policy-file=/etc/kubernetes/audit-policy.yaml \
-  --extra-config=apiserver.audit-log-path=/var/log/audit.log \
-  --mount \
-  --mount-string="//c/Users/binom/YandexDisk/Курсы/Архитектура\ ПО/Спринт\ 05\ Проектная\ работа\ PropDevelopment/yandex-practicum-architecture-pro--propdevelopment/Task6:/etc/kubernetes" \
-  --mount-string="//c/Users/binom/YandexDisk/Курсы/Архитектура\ ПО/Спринт\ 05\ Проектная\ работа\ PropDevelopment/yandex-practicum-architecture-pro--propdevelopment/Task6/audit-logs:/var/log"
-```
+## Запустить Minikube с политикой аудита
 
 Смонтировать на windows получилось только через PowerShell
 
 ```powershell
-# Использовать короткий путь без пробелов/кириллицы
-$CONFIG_PATH = "C:\Users\binom\YandexDisk\Курсы\Архитектура ПО\Спринт 05 Проектная работа PropDevelopment\yandex-practicum-architecture-pro--propdevelopment\Task6"
-New-Item -ItemType Directory -Force -Path $CONFIG_PATH
-Copy-Item .\audit-policy.yaml -Destination "$CONFIG_PATH/"
-
+[Console]::OutputEncoding = [System.Text.Encoding]::GetEncoding("utf-8")
+# 1. Очистите старый кластер
 minikube delete --purge
-minikube start `
-  --driver=docker `
+#minikube delete
+
+
+# 3. Скопируйте audit-policy.yaml внутрь VM
+# Путь на Windows (откуда):
+$SOURCE = "C:\Users\binom\YandexDisk\Курсы\Архитектура ПО\Спринт 05 Проектная работа PropDevelopment\yandex-practicum-architecture-pro--propdevelopment\Task6"
+
+# Путь внутри Minikube VM (куда):
+$DEST = "/etc/kubernetes/audit-policy.yaml"
+
+# 2. Запустите чистый кластер БЕЗ монтирования
+minikube start --driver=docker --kubernetes-version=v1.32.0 --mount-string="${SOURCE}\audit-logs:/var/log"
+
+minikube cp "${SOURCE}\audit-policy.yaml" "$DEST"
+
+# 4. Проверьте, что файл внутри
+minikube ssh "cat $DEST"
+
+# 5. Перезапустите с конфигурацией аудита
+minikube stop
+minikube start --driver=docker `
   --extra-config=apiserver.audit-policy-file=/etc/kubernetes/audit-policy.yaml `
-  --extra-config=apiserver.audit-log-path=/var/log/audit.log `
-  --mount `
-  --mount-string="${CONFIG_PATH}:/etc/kubernetes" `
-  --mount-string="${CONFIG_PATH}\audit-logs:/var/log"
+  --extra-config=apiserver.audit-log-path=/var/log/audit.log
+
+
+# 6. Создайте файл логов внутри VM
+#minikube ssh "mkdir -p /var/log && touch /var/log/audit.log"
+
+# 7. Настройте kubectl на minikube
+minikube update-context
+kubectl config use-context minikube
 ```
 
 ## Скрипт симуляции
