@@ -1,0 +1,29 @@
+{
+  "extra-config": [
+    {
+      "component": "apiserver",
+      "key": "audit-policy-file",
+      "value": "/etc/kubernetes/audit-policy.yaml"
+    },
+    {
+      "component": "apiserver",
+      "key": "audit-log-path",
+      "value": "/var/log/audit.log"
+    },
+    {
+      "component": "apiserver",
+      "key": "audit-log-maxage",
+      "value": "1"
+    },
+    {
+      "component": "apiserver",
+      "key": "audit-log-maxbackup",
+      "value": "1"
+    },
+    {
+      "component": "apiserver",
+      "key": "audit-log-maxsize",
+      "value": "100"
+    }
+  ]
+}
