@@ -1,0 +1,126 @@
+[
+  {
+    "kind": "Event",
+    "apiVersion": "audit.k8s.io/v1",
+    "level": "RequestResponse",
+    "auditID": "1001",
+    "stage": "ResponseComplete",
+    "requestURI": "/api/v1/namespaces/kube-system/secrets/default-token-xyz",
+    "verb": "get",
+    "user": {
+      "username": "system:serviceaccount:secure-ops:monitoring",
+      "groups": ["system:serviceaccounts", "system:serviceaccounts:secure-ops"]
+    },
+    "sourceIPs": ["10.0.0.5"],
+    "objectRef": {
+      "resource": "secrets",
+      "namespace": "kube-system",
+      "name": "default-token-xyz"
+    },
+    "responseStatus": {"code": 200},
+    "requestObject": {"kind": "Secret", "apiVersion": "v1"}
+  },
+  {
+    "kind": "Event",
+    "apiVersion": "audit.k8s.io/v1",
+    "level": "RequestResponse",
+    "auditID": "1002",
+    "stage": "ResponseComplete",
+    "requestURI": "/api/v1/namespaces/secure-ops/pods",
+    "verb": "create",
+    "user": {
+      "username": "admin",
+      "groups": ["system:masters"]
+    },
+    "sourceIPs": ["10.0.0.5"],
+    "objectRef": {
+      "resource": "pods",
+      "namespace": "secure-ops",
+      "name": "privileged-pod"
+    },
+    "responseStatus": {"code": 201},
+    "requestObject": {
+      "kind": "Pod",
+      "apiVersion": "v1",
+      "spec": {
+        "containers": [
+          {
+            "name": "pwn",
+            "image": "alpine",
+            "securityContext": {"privileged": true}
+          }
+        ]
+      }
+    }
+  },
+  {
+    "kind": "Event",
+    "apiVersion": "audit.k8s.io/v1",
+    "level": "RequestResponse",
+    "auditID": "1003",
+    "stage": "ResponseComplete",
+    "requestURI": "/api/v1/namespaces/kube-system/pods/coredns-xyz/exec",
+    "verb": "create",
+    "user": {
+      "username": "admin",
+      "groups": ["system:masters"]
+    },
+    "sourceIPs": ["10.0.0.5"],
+    "objectRef": {
+      "resource": "pods",
+      "namespace": "kube-system",
+      "name": "coredns-xyz",
+      "subresource": "exec"
+    },
+    "responseStatus": {"code": 200}
+  },
+  {
+    "kind": "Event",
+    "apiVersion": "audit.k8s.io/v1",
+    "level": "Metadata",
+    "auditID": "1004",
+    "stage": "ResponseComplete",
+    "requestURI": "/api/v1/namespaces/kube-system/configmaps/audit-policy",
+    "verb": "delete",
+    "user": {
+      "username": "admin",
+      "groups": ["system:masters"]
+    },
+    "sourceIPs": ["10.0.0.5"],
+    "objectRef": {
+      "resource": "configmaps",
+      "namespace": "kube-system",
+      "name": "audit-policy"
+    },
+    "responseStatus": {"code": 200}
+  },
+  {
+    "kind": "Event",
+    "apiVersion": "audit.k8s.io/v1",
+    "level": "RequestResponse",
+    "auditID": "1005",
+    "stage": "ResponseComplete",
+    "requestURI": "/apis/rbac.authorization.k8s.io/v1/namespaces/secure-ops/rolebindings",
+    "verb": "create",
+    "user": {
+      "username": "admin",
+      "groups": ["system:masters"]
+    },
+    "sourceIPs": ["10.0.0.5"],
+    "objectRef": {
+      "resource": "rolebindings",
+      "namespace": "secure-ops",
+      "name": "escalate-binding"
+    },
+    "responseStatus": {"code": 201},
+    "requestObject": {
+      "kind": "RoleBinding",
+      "apiVersion": "rbac.authorization.k8s.io/v1",
+      "roleRef": {
+        "kind": "ClusterRole",
+        "name": "cluster-admin",
+        "apiGroup": "rbac.authorization.k8s.io"
+      }
+    }
+  }
+]

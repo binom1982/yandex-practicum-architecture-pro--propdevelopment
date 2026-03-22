@@ -2,6 +2,35 @@
 
 ## Запустить Minikube с политикой аудита
 
+Решение (без --mount) bash
+
+```bash
+mkdir C:\minikube\audit
+mkdir C:\minikube\logs
+
+minikube start --driver=docker \
+  --mount --mount-string="C:/minikube:/mnt/audit" \
+  --extra-config=apiserver.audit-policy-file=/mnt/audit/audit/audit-policy.yaml \
+  --extra-config=apiserver.audit-log-path=/mnt/audit/logs/audit.log \
+  --extra-config=apiserver.audit-log-maxage=30 \
+  --extra-config=apiserver.audit-log-maxbackup=10 \
+  --extra-config=apiserver.audit-log-maxsize=100
+```
+
+Проверка
+
+```bash
+minikube status
+# Ожидаем:
+#   host: Running
+#   kubelet: Running
+#   apiserver: Running
+#   kubeconfig: Configured
+
+kubectl cluster-info
+kubectl get pods -n kube-system -l component=kube-apiserver
+```
+
 Смонтировать на windows получилось только через PowerShell
 
 ```powershell
@@ -47,9 +76,18 @@ kubectl config use-context minikube
 bash simulate-incident.sh
 ```
 
-## Скрипт анализа
+## Проверка файлов
 
-```
-chmod +x filter_audit.sh
-./filter_audit.sh
+```bash
+# Установите jq, если ещё не установлен
+winget install jqlang.jq
+
+# Проверка через jq (альтернатива скрипту)
+jq 'select(.objectRef.resource=="secrets" and .verb=="get")' audit.log
+jq 'select(.verb=="create" and .objectRef.subresource=="exec")' audit.log
+jq 'select(.objectRef.resource=="pods" and .requestObject.spec.containers[].securityContext.privileged==true)' audit.log
+grep -i 'audit-policy' audit.log
+
+# Или через Python-скрипт
+python filter_audit.py
 ```
