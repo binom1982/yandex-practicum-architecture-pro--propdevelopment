@@ -1,0 +1,107 @@
+# back-end-api слушает только front-end.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: policy-backend-ingress
+  namespace: prop-dev-ns
+spec:
+  podSelector:
+    matchLabels:
+      role: back-end-api
+  policyTypes:
+  - Ingress
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          role: front-end
+    ports:
+    - protocol: TCP
+      port: 80
+---
+# admin-back-end-api слушает только admin-front-end
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: policy-admin-backend-ingress
+  namespace: prop-dev-ns
+spec:
+  podSelector:
+    matchLabels:
+      role: admin-back-end-api
+  policyTypes:
+  - Ingress
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          role: admin-front-end
+    ports:
+    - protocol: TCP
+      port: 80
+---
+# front-end может ходить только в back-end-api
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: policy-front-egress
+  namespace: prop-dev-ns
+spec:
+  podSelector:
+    matchLabels:
+      role: front-end
+  policyTypes:
+  - Egress
+  egress:
+  - to:
+    - podSelector:
+        matchLabels:
+          role: back-end-api
+    ports:
+    - protocol: TCP
+      port: 80
+---
+# admin-front-end может ходить только в admin-back-end-api
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: policy-admin-front-egress
+  namespace: prop-dev-ns
+spec:
+  podSelector:
+    matchLabels:
+      role: admin-front-end
+  policyTypes:
+  - Egress
+  egress:
+  - to:
+    - podSelector:
+        matchLabels:
+          role: admin-back-end-api
+    ports:
+    - protocol: TCP
+      port: 80
+---
+# Разрешаем внешний доступ к фронтендам
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: policy-allow-external-to-frontends
+  namespace: prop-dev-ns
+spec:
+  # Применяем к обоим типам фронтендов
+  podSelector:
+    matchExpressions:
+      - key: role
+        operator: In
+        values:
+        - front-end
+        - admin-front-end
+  policyTypes:
+  - Ingress
+  ingress:
+  # Пустой массив from или отсутствие ограничения from разрешает трафик отовсюду
+  - from: []
+    ports:
+    - protocol: TCP
+      port: 80
